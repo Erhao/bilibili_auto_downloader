@@ -7,7 +7,7 @@ from app.task.worker import bili_task
 from app.core.config import config
 from app.router.video import router as video_router
 
-os.environ["FFMPEG_BINARY"] = "/usr/local/bin/ffmpeg"
+os.environ["FFMPEG_BINARY"] = config.FFMPEG_BINARY
 
 app = FastAPI(debug=True)
 

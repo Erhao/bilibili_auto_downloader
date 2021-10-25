@@ -51,7 +51,7 @@ class BiliTask:
                 video['state'] = 50
 
         num = 1
-        currentVideoPath = os.path.join(sys.path[0], 'bilibili_video', title)  # 当前目录作为下载目录
+        currentVideoPath = os.path.join(config.SAVE_PATH if config.SAVE_PATH else sys.path[0], 'bilibili_video', title)  # 当前目录作为下载目录
         if not os.path.exists(currentVideoPath):
             os.makedirs(currentVideoPath)
         for i in video_list:

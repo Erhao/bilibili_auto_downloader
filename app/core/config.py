@@ -19,5 +19,9 @@ class Config:
 
     STORAGE_FILE = None
 
+    FFMPEG_BINARY = os.getenv("FFMPEG_BINARY")
+
+    SAVE_PATH = os.getenv("SAVE_PATH")
+
 
 config = Config()
