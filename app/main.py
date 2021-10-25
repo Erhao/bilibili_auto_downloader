@@ -8,6 +8,7 @@ from app.core.config import config
 from app.router.video import router as video_router
 
 os.environ["FFMPEG_BINARY"] = config.FFMPEG_BINARY
+os.environ['TZ'] = 'Asia/Shanghai'
 
 app = FastAPI(debug=True)
 
