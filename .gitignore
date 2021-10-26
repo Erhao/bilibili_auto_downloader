@@ -130,4 +130,7 @@ dmypy.json
 
 .idea
 
-bilibili_video
+bilibili_video/
+
+data.json
+bili.json

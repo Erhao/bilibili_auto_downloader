@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import requests
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.model.video import Video
 from app.utils.bilibili import get_play_list
+from app.task.worker import bili_task
 
 
 router = APIRouter()
@@ -26,6 +26,7 @@ async def add_aid(aid: int):
     # 下载全集
     pages = data['pages']
 
+    videos = []
     for idx, item in enumerate(pages):
         doc = {}
 
@@ -42,9 +43,15 @@ async def add_aid(aid: int):
         doc['duration'] = item['duration']
         doc['play_list'] = play_list
         doc['part_url'] = part_url
-        await Video(**doc).save()
+        doc['state'] = 10
+        videos.append(doc)
 
-    return {}
+    videos_map = {
+        aid: videos
+    }
+    bili_task.update_data(videos_map)
+
+    return {"ok": 1}
 
 
 
