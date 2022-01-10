@@ -29,5 +29,7 @@ class Config:
 
     MAX_THREAD_WORKER = int(os.getenv("MAX_THREAD_WORKER", 5))
 
+    CPU_COUNT = multiprocessing.cpu_count()
+
 
 config = Config()
