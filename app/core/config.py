@@ -1,4 +1,5 @@
 import os
+import multiprocessing
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -22,6 +23,8 @@ class Config:
     FFMPEG_BINARY = os.getenv("FFMPEG_BINARY")
 
     SAVE_PATH = os.getenv("SAVE_PATH")
+
+    CPU_COUNT = multiprocessing.cpu_count()
 
 
 config = Config()
