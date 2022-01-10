@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, BackgroundTasks
 
-from app.utils.bilibili import get_play_list, mock_down_video
+from app.utils.bilibili import get_play_list, mock_down_video, down_video
 
 
 router = APIRouter()
@@ -36,7 +36,7 @@ async def start_cpu_bound_task(uid: UUID, videos) -> None:
     for i in range(0, len(videos), cpu_cnt):
         results = await asyncio.gather(
             *[
-                run_in_process(mock_down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
+                run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
                 for item in videos[i:i+cpu_cnt]
             ]
         )

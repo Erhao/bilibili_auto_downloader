@@ -48,17 +48,11 @@ def down_video(aid, cid, video_list, title, part, start_url, page):
     :param page:
     :return:
     """
-    S.acquire()
+    # S.acquire()
     print(f'#### downloading {part} ####')
 
-    # 更新state为50
-    videos = self.data[aid]
-    for video in videos:
-        if video['cid'] == cid:
-            video['state'] = 50
-
     num = 1
-    currentVideoPath = os.path.join(config.SAVE_PATH if config.SAVE_PATH else sys.path[0], 'bilibili_video', title)  # 当前目录作为下载目录
+    currentVideoPath = os.path.join(config.SAVE_PATH if config.SAVE_PATH else sys.path[0], '../bilibili_video', title)
     if not os.path.exists(currentVideoPath):
         os.makedirs(currentVideoPath)
     for i in video_list:
@@ -86,12 +80,8 @@ def down_video(aid, cid, video_list, title, part, start_url, page):
             urllib.request.urlretrieve(url=i, filename=os.path.join(currentVideoPath, r'{}.flv'.format(part)))  # 写成mp4也行  title + '-' + num + '.flv'
         num += 1
 
-    # 更新state为100
-    for video in videos:
-        if video['cid'] == cid:
-            video['state'] = 100
     print(f'#### finished {part} ####')
-    S.release()
+    # S.release()
 
 
 # TODO: decorate with retry decorator
