@@ -1,3 +1,4 @@
+import sys
 import os
 import multiprocessing
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ class Config:
 
     FFMPEG_BINARY = os.getenv("FFMPEG_BINARY")
 
-    SAVE_PATH = os.getenv("SAVE_PATH")
+    SAVE_PATH = os.getenv("SAVE_PATH") or os.path.join(sys.path[0], '../bilibili_download')
 
     CPU_COUNT = multiprocessing.cpu_count()
 

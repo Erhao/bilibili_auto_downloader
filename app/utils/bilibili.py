@@ -1,18 +1,14 @@
 import os
-import sys
 import threading
 import hashlib
 import requests
 import time
 import urllib.request
+from retry import retry
 
 os.environ["FFMPEG_BINARY"] = "/usr/local/bin/ffmpeg"
 
 from app.core.config import config
-
-
-# 线程信号量, 限制并发数
-S = threading.Semaphore(5)
 
 
 def get_play_list(start_url, cid, quality):
@@ -25,17 +21,14 @@ def get_play_list(start_url, cid, quality):
         'Referer': start_url,  # 注意加上referer
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
     }
-    # print(url_api)
     html = requests.get(url_api, headers=headers).json()
-    # print(json.dumps(html))
     play_list = []
     for i in html['durl']:
         play_list.append(i['url'])
-    # print(play_list)
     return play_list
 
 
-# TODO: decorate with retry decorator
+@retry(tries=3, delay=5)
 def down_video(aid, cid, video_list, title, part, start_url, page):
     """
     下载视频
@@ -48,14 +41,12 @@ def down_video(aid, cid, video_list, title, part, start_url, page):
     :param page:
     :return:
     """
-    # S.acquire()
     print(f'#### downloading {part} ####')
 
-    num = 1
-    currentVideoPath = os.path.join(config.SAVE_PATH if config.SAVE_PATH else sys.path[0], '../bilibili_video', title)
-    if not os.path.exists(currentVideoPath):
-        os.makedirs(currentVideoPath)
-    for i in video_list:
+    download_path = os.path.join(config.SAVE_PATH, "{}__{}".format(title, str(aid)))
+    if not os.path.exists(download_path):
+        os.makedirs(download_path)
+    for url in video_list:
         opener = urllib.request.build_opener()
         # 请求头
         opener.addheaders = [
@@ -70,24 +61,17 @@ def down_video(aid, cid, video_list, title, part, start_url, page):
             ('Connection', 'keep-alive'),
         ]
         urllib.request.install_opener(opener)
-        # 创建文件夹存放下载的视频
-        if not os.path.exists(currentVideoPath):
-            os.makedirs(currentVideoPath)
         # 开始下载
         if len(video_list) > 1:
-            urllib.request.urlretrieve(url=i, filename=os.path.join(currentVideoPath, r'{}-{}.flv'.format(part, num)))  # 写成mp4也行  title + '-' + num + '.flv'
+            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path, r'{}-{}.flv'.format(part, 1)))  # 写成mp4也行
         else:
-            urllib.request.urlretrieve(url=i, filename=os.path.join(currentVideoPath, r'{}.flv'.format(part)))  # 写成mp4也行  title + '-' + num + '.flv'
-        num += 1
+            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path, r'{}__{}.flv'.format(page, part)))  # 写成mp4也行
 
     print(f'#### finished {part} ####')
-    # S.release()
 
 
 # TODO: decorate with retry decorator
 def mock_down_video(aid, cid, video_list, title, part, start_url, page):
-    S.acquire()
     print('=============== MOCK DOWNLOAD start =================')
     time.sleep(5)
     print('!!!!!!!!!!!! MOCK DOWNLOAD END !!!!!!!!!!!!!')
-    S.release()
