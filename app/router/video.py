@@ -30,8 +30,23 @@ cpu_cnt = multiprocessing.cpu_count()
 
 async def run_in_process(fn, *args):
     loop = asyncio.get_event_loop()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, fn, *args)  # wait and return result
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        return await loop.run_in_executor(executor, fn, *args)  # wait and return result
+
+
+def run_in_thread(videos):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=config.MAX_THREAD_WORKER) as executor:
+        # future_res = {executor.submit(down_video, video): video for video in videos}
+        # for future in concurrent.futures.as_completed(future_res):
+        #     res = future_res[future]
+        #     try:
+        #         data = future.result()
+        #     except Exception as exc:
+        #         print('%r generated an exception: %s' % (res, exc))
+        #     else:
+        #         print('%r page is %d bytes' % (res, len(data)))
+
+        executor.map(down_video, videos)
 
 
 async def start_cpu_bound_task(uid: UUID, item) -> None:
@@ -45,6 +60,11 @@ async def start_cpu_bound_task(uid: UUID, item) -> None:
     #             for item in videos[i:i+cpu_cnt]
     #         ]
     #     )
+
+
+async def start_net_bound_task(uid: UUID, item) -> None:
+    pass
+
 
 
 @router.get("/add")
@@ -84,13 +104,7 @@ async def add_aid(aid: int, background_tasks: BackgroundTasks):
         doc['state'] = 10
         videos.append(doc)
 
-        new_task = Job()
-        jobs[new_task.uid] = new_task
-        background_tasks.add_task(start_cpu_bound_task, new_task.uid, doc)
-    #
-    # new_task = Job()
-    # jobs[new_task.uid] = new_task
-    # background_tasks.add_task(start_cpu_bound_task, new_task.uid, videos)
+    background_tasks.add_task(run_in_thread, videos)
 
     return {"success": 1, "count": len(videos), "new_tasks": [v['part'] for v in videos]}
 

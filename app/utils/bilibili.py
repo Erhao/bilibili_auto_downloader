@@ -29,18 +29,20 @@ def get_play_list(start_url, cid, quality):
 
 
 @retry(tries=3, delay=5)
-def down_video(aid, cid, video_list, title, part, start_url, page):
+def down_video(param):
     """
     下载视频
-    :param aid:
-    :param cid:
-    :param video_list:
-    :param title:
-    :param part:
-    :param start_url:
-    :param page:
+    :param param:
     :return:
     """
+    aid = param['aid']
+    cid = param['cid']
+    video_list = param['play_list']
+    title = param['title']
+    part = param['part']
+    start_url = param['part_url']
+    page = param['page']
+
     print(f'#### downloading {part} ####')
 
     download_path = os.path.join(config.SAVE_PATH, "{}__{}".format(title, str(aid)))
