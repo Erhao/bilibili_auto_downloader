@@ -34,16 +34,17 @@ async def run_in_process(fn, *args):
         return await loop.run_in_executor(pool, fn, *args)  # wait and return result
 
 
-async def start_cpu_bound_task(uid: UUID, videos) -> None:
-    # jobs[uid].result = await run_in_process(mock_down_video, *args, **kwargs)
-    # jobs[uid].status = "complete"
-    for i in range(0, len(videos), cpu_cnt):
-        results = await asyncio.gather(
-            *[
-                run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
-                for item in videos[i:i+cpu_cnt]
-            ]
-        )
+async def start_cpu_bound_task(uid: UUID, item) -> None:
+    jobs[uid].result = await run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
+    jobs[uid].status = "complete"
+
+    # for i in range(0, len(videos), cpu_cnt):
+    #     results = await asyncio.gather(
+    #         *[
+    #             run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
+    #             for item in videos[i:i+cpu_cnt]
+    #         ]
+    #     )
 
 
 @router.get("/add")
@@ -83,9 +84,13 @@ async def add_aid(aid: int, background_tasks: BackgroundTasks):
         doc['state'] = 10
         videos.append(doc)
 
-    new_task = Job()
-    jobs[new_task.uid] = new_task
-    background_tasks.add_task(start_cpu_bound_task, new_task.uid, videos)
+        new_task = Job()
+        jobs[new_task.uid] = new_task
+        background_tasks.add_task(start_cpu_bound_task, new_task.uid, doc)
+    #
+    # new_task = Job()
+    # jobs[new_task.uid] = new_task
+    # background_tasks.add_task(start_cpu_bound_task, new_task.uid, videos)
 
     return {"success": 1, "count": len(videos), "new_tasks": [v['part'] for v in videos]}
 
