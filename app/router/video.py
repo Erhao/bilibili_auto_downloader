@@ -3,7 +3,7 @@ import os
 import requests
 from fastapi import APIRouter, BackgroundTasks
 
-from app.utils.bilibili import get_play_list, mock_down_video, down_video, multi_thread_down_video, run_in_multiprocess
+from app.utils.bilibili import get_play_list, run_in_multiprocess
 from app.core.config import config
 
 
