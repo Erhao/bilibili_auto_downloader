@@ -1,5 +1,5 @@
+import concurrent.futures
 import os
-import threading
 import hashlib
 import requests
 import time
@@ -65,15 +65,41 @@ def down_video(param):
         urllib.request.install_opener(opener)
         # 开始下载
         if len(video_list) > 1:
-            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path, r'{}-{}.flv'.format(part, 1)))  # 写成mp4也行
+            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path,
+                                                                      r'{}-{}.mp4'.format(part, 1)))  # .mp4 or .flv
         else:
-            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path, r'{}__{}.flv'.format(page, part)))  # 写成mp4也行
+            urllib.request.urlretrieve(url=url, filename=os.path.join(download_path,
+                                                                      r'{}__{}.mp4'.format(page, part)))  # .mp4 or .flv
 
     print(f'#### finished {part} ####')
 
 
-# TODO: decorate with retry decorator
-def mock_down_video(aid, cid, video_list, title, part, start_url, page):
+def mock_down_video(video):
     print('=============== MOCK DOWNLOAD start =================')
+    print(type(video), video['aid'], video['page'])
     time.sleep(5)
     print('!!!!!!!!!!!! MOCK DOWNLOAD END !!!!!!!!!!!!!')
+
+
+def run_in_multiprocess(videos):
+    cpu_cnt = config.CPU_COUNT
+    # TODO: 添加result追溯
+    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_cnt) as executor:
+        # 每个进程都执行部分下载任务
+        piece_size = int(len(videos) / cpu_cnt)
+        for i in range(0, len(videos), piece_size):
+            video_slice = videos[i:i + piece_size]
+            # 总共提交cpu_cnt个多线程下载任务
+            executor.submit(run_in_multithread, video_slice)
+        print("ALL DOWNLOAD -- ALL DOWNLOAD -- ALL DOWNLOAD")
+
+
+def run_in_multithread(videos):
+    """
+    多线程下载
+    """
+    max_thread_worker = config.MAX_THREAD_WORKER
+    # TODO: 添加result追溯
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_thread_worker) as executor:
+        executor.map(down_video, videos)
+        # executor.map(mock_down_video, videos)

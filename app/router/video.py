@@ -1,70 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
-import asyncio
-import concurrent.futures
-import multiprocessing
 import requests
-from typing import Dict
-from uuid import UUID, uuid4
-from pydantic import BaseModel, Field
 from fastapi import APIRouter, BackgroundTasks
 
-from app.utils.bilibili import get_play_list, mock_down_video, down_video
+from app.utils.bilibili import get_play_list, mock_down_video, down_video, multi_thread_down_video, run_in_multiprocess
 from app.core.config import config
 
 
 IGNORED_FILES = [".DS_Store"]
 
 router = APIRouter()
-
-
-class Job(BaseModel):
-    uid: UUID = Field(default_factory=uuid4)
-    status: str = "in_progress"
-    result: int = None
-
-
-jobs: Dict[UUID, Job] = {}
-cpu_cnt = multiprocessing.cpu_count()
-
-
-async def run_in_process(fn, *args):
-    loop = asyncio.get_event_loop()
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        return await loop.run_in_executor(executor, fn, *args)  # wait and return result
-
-
-def run_in_thread(videos):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=config.MAX_THREAD_WORKER) as executor:
-        # future_res = {executor.submit(down_video, video): video for video in videos}
-        # for future in concurrent.futures.as_completed(future_res):
-        #     res = future_res[future]
-        #     try:
-        #         data = future.result()
-        #     except Exception as exc:
-        #         print('%r generated an exception: %s' % (res, exc))
-        #     else:
-        #         print('%r page is %d bytes' % (res, len(data)))
-
-        executor.map(down_video, videos)
-
-
-async def start_cpu_bound_task(uid: UUID, item) -> None:
-    jobs[uid].result = await run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
-    jobs[uid].status = "complete"
-
-    # for i in range(0, len(videos), cpu_cnt):
-    #     results = await asyncio.gather(
-    #         *[
-    #             run_in_process(down_video, item['aid'], item['cid'], item['play_list'], item['title'], item['part'], item['part_url'], item['page'])
-    #             for item in videos[i:i+cpu_cnt]
-    #         ]
-    #     )
-
-
-async def start_net_bound_task(uid: UUID, item) -> None:
-    pass
-
 
 
 @router.get("/add")
@@ -104,7 +49,7 @@ async def add_aid(aid: int, background_tasks: BackgroundTasks):
         doc['state'] = 10
         videos.append(doc)
 
-    background_tasks.add_task(run_in_thread, videos)
+    background_tasks.add_task(run_in_multiprocess, videos)
 
     return {"success": 1, "count": len(videos), "new_tasks": [v['part'] for v in videos]}
 
@@ -144,10 +89,6 @@ async def complete(background_tasks: BackgroundTasks):
             # TODO
 
 
-
 @router.get("/data")
 async def get_data():
     pass
-
-
-
