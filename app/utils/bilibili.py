@@ -72,6 +72,7 @@ def down_video(param):
                                                                       r'{}__{}.mp4'.format(page, part)))  # .mp4 or .flv
 
     print(f'#### finished {part} ####')
+    return
 
 
 def mock_down_video(video):
@@ -79,6 +80,7 @@ def mock_down_video(video):
     print(type(video), video['aid'], video['page'])
     time.sleep(5)
     print('!!!!!!!!!!!! MOCK DOWNLOAD END !!!!!!!!!!!!!')
+    return
 
 
 def run_in_multiprocess(videos):
@@ -92,6 +94,7 @@ def run_in_multiprocess(videos):
             # 总共提交cpu_cnt个多线程下载任务
             executor.submit(run_in_multithread, video_slice)
         print("ALL DOWNLOAD -- ALL DOWNLOAD -- ALL DOWNLOAD")
+    return
 
 
 def run_in_multithread(videos):
@@ -103,3 +106,4 @@ def run_in_multithread(videos):
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_thread_worker) as executor:
         executor.map(down_video, videos)
         # executor.map(mock_down_video, videos)
+    return
