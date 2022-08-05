@@ -9,7 +9,7 @@ from app.core.config import config
 
 
 # 线程信号量, 限制并发数
-S = threading.Semaphore(5)
+S = threading.Semaphore(10)
 
 
 class BiliTask:
